@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Program list
+p_n_size=1
+p_n_db=()
+programs_name=$(pactl list sink-inputs | grep -Po 'binary = "\K[^"]*')
+#printf '%s\n' "$programs_name"
+
+p_i_count=0
+p_i_db=()
+programs_index=$(pactl list sink-inputs | grep -Po '(?<=Sink Input #).*')
+#printf '%s\n' "$programs_index"
+
+# Sink list
+s_n_size=1
+s_n_db=()
+sinks_name=$(pactl list sinks | grep -Po 'Description: \K.*')
+#printf '%s\n' "$sinks_name"
+
+s_i_count=0
+s_i_db=()
+sinks_index=$(pactl list sinks | grep -Po '(?<=Sink #).*')
+#printf '%s\n' "$sinks_index"
+
+for p_name in $programs_name
+do
+	p_n_db[${#p_n_db[@]}]=$p_name
+	p_n_size+=1
+done
+
+for p_index in $programs_index
+do
+	p_i_db[${#p_i_db[@]}]=$p_index
+	p_i_count+=1
+done
+
+IFS=$'\n' fixed_sinks_name=($sinks_name)
+
+for s_name in "${fixed_sinks_name[@]}"
+do
+	s_n_db[${#s_n_db[@]}]=$s_name
+	s_n_size+=1
+done
+
+for s_index in $sinks_index
+do
+	s_i_db[${#s_i_db[@]}]=$s_index
+	s_i_count+=1
+done
+
+ret_prog=$(printf '%s' "$programs_name" | dmenu -l $p_n_size)
+
+ret_sink=$(printf '%s' "$sinks_name" | dmenu -l $s_n_size)
+
+for (( i = 0; i < ${#p_n_db[@]}; i++ )); do
+	if [ "${p_n_db[$i]}" = "${ret_prog}" ]; then
+		index_prog=$i;
+	fi
+done
+
+
+
+for (( i = 0; i < ${#s_n_db[@]}; i++ )); do
+	if [ "${s_n_db[$i]}" = "${ret_sink}" ]; then
+		index_sink=$i;
+	fi
+done
+
+ret=$(pactl move-sink-input ${p_i_db[$index_prog]} ${s_i_db[$index_sink]})
