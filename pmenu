@@ -1,64 +1,39 @@
 #!/bin/bash
 
 # Program list
-p_n_size=1
-p_n_db=()
 programs_name=$(pactl list sink-inputs | grep -Po 'binary = "\K[^"]*')
-#printf '%s\n' "$programs_name"
 
-p_i_count=0
-p_i_db=()
 programs_index=$(pactl list sink-inputs | grep -Po '(?<=Sink Input #).*')
-#printf '%s\n' "$programs_index"
 
 # Sink list
-s_n_size=1
-s_n_db=()
 sinks_name=$(pactl list sinks | grep -Po 'Description: \K.*')
-#printf '%s\n' "$sinks_name"
 
-s_i_count=0
-s_i_db=()
 sinks_index=$(pactl list sinks | grep -Po '(?<=Sink #).*')
-#printf '%s\n' "$sinks_index"
 
-for p_name in $programs_name
-do
-	p_n_db[${#p_n_db[@]}]=$p_name
-	p_n_size+=1
-done
+# Format values n' what not
+IFS=$'\n' p_n_db=($programs_name)
+p_n_size=${#p_n_db[@]}+1
 
-for p_index in $programs_index
-do
-	p_i_db[${#p_i_db[@]}]=$p_index
-	p_i_count+=1
-done
+IFS=$'\n' p_i_db=($programs_index)
+p_i_count=${#p_i_db[@]}
 
-IFS=$'\n' fixed_sinks_name=($sinks_name)
+IFS=$'\n' s_n_db=($sinks_name)
+s_n_size=${#s_n_db[@]}+1
 
-for s_name in "${fixed_sinks_name[@]}"
-do
-	s_n_db[${#s_n_db[@]}]=$s_name
-	s_n_size+=1
-done
+IFS=$'\n' s_i_db=($sinks_index)
+s_i_count=${#s_i_db[@]}
 
-for s_index in $sinks_index
-do
-	s_i_db[${#s_i_db[@]}]=$s_index
-	s_i_count+=1
-done
 
 ret_prog=$(printf '%s' "$programs_name" | dmenu -l $p_n_size)
 
 ret_sink=$(printf '%s' "$sinks_name" | dmenu -l $s_n_size)
 
+# Get indexes of ret_prog and ret_sink in *_name_db
 for (( i = 0; i < ${#p_n_db[@]}; i++ )); do
 	if [ "${p_n_db[$i]}" = "${ret_prog}" ]; then
 		index_prog=$i;
 	fi
 done
-
-
 
 for (( i = 0; i < ${#s_n_db[@]}; i++ )); do
 	if [ "${s_n_db[$i]}" = "${ret_sink}" ]; then
@@ -66,4 +41,5 @@ for (( i = 0; i < ${#s_n_db[@]}; i++ )); do
 	fi
 done
 
+# Execute command
 ret=$(pactl move-sink-input ${p_i_db[$index_prog]} ${s_i_db[$index_sink]})
