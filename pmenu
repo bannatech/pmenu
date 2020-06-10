@@ -23,10 +23,18 @@ s_n_size=${#s_n_db[@]}+1
 IFS=$'\n' s_i_db=($sinks_index)
 s_i_count=${#s_i_db[@]}
 
-
 ret_prog=$(printf '%s' "$programs_name" | dmenu -l $p_n_size)
+# dmenu will return an empty string if we haven't selected anything
+# so let's return 0 instead
+if [ -z $ret_prog ]; then
+	exit 0
+fi
 
 ret_sink=$(printf '%s' "$sinks_name" | dmenu -l $s_n_size)
+
+if [ -z $ret_sink ]; then
+	exit 0
+fi
 
 # Get indexes of ret_prog and ret_sink in *_name_db
 for (( i = 0; i < ${#p_n_db[@]}; i++ )); do
